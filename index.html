@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>新日本语教程 初级2 · 刷题</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="初级2刷题">
+<meta name="theme-color" content="#f6f3ec">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- ============ 选题范围 ============ -->
+<section id="screen-setup" class="screen">
+  <header class="topbar">
+    <h1>新日本语教程 <span class="vol">初级2</span></h1>
+    <p class="sub" id="bank-sub">选择题库范围</p>
+  </header>
+
+  <div id="resume-banner" class="banner hidden">
+    <div class="banner-txt">
+      <strong>上次还没做完</strong>
+      <span id="resume-detail"></span>
+    </div>
+    <div class="banner-btns">
+      <button id="btn-resume" class="btn btn-primary btn-sm">继续</button>
+      <button id="btn-discard" class="btn btn-ghost btn-sm">放弃</button>
+    </div>
+  </div>
+
+  <div id="lesson-list" class="lesson-list"></div>
+
+  <footer class="footbar">
+    <div class="footinfo"><span id="sel-info">已选 0 课 · 0 题</span></div>
+    <button id="btn-start" class="btn btn-primary" disabled>开始练习</button>
+  </footer>
+</section>
+
+<!-- ============ 答题 ============ -->
+<section id="screen-quiz" class="screen hidden">
+  <header class="quizbar">
+    <button id="btn-quit" class="iconbtn" aria-label="退出">✕</button>
+    <div class="qmeta"><span id="q-counter">1 / 1</span><span id="q-lesson"></span></div>
+    <button id="btn-skip" class="iconbtn" aria-label="跳过">›</button>
+  </header>
+  <div class="progress"><div id="progress-fill"></div></div>
+
+  <main class="qwrap">
+    <div class="qcard">
+      <div id="q-stem" class="stem"></div>
+      <div id="q-options" class="options"></div>
+    </div>
+
+    <div id="q-feedback" class="feedback hidden">
+      <div id="fb-verdict" class="verdict"></div>
+      <div class="gpanel">
+        <div class="gp-label">语法点</div>
+        <div id="gp-pattern" class="gp-pattern"></div>
+        <div id="gp-meta" class="gp-meta"></div>
+        <div id="gp-book" class="gp-book"></div>
+        <div id="gp-brief" class="gp-brief"></div>
+      </div>
+      <div id="q-src" class="qsrc"></div>
+      <button id="btn-next" class="btn btn-primary btn-block">下一题</button>
+    </div>
+  </main>
+</section>
+
+<!-- ============ 完成 ============ -->
+<section id="screen-done" class="screen hidden">
+  <header class="topbar"><h1>这一轮完成啦</h1></header>
+  <main class="donewrap">
+    <div class="score">
+      <div id="done-rate" class="rate">--%</div>
+      <div id="done-nums" class="nums"></div>
+    </div>
+    <div id="wrong-box" class="wrongbox"></div>
+    <div class="donebtns">
+      <button id="btn-again-wrong" class="btn btn-primary btn-block hidden">只练错题</button>
+      <button id="btn-newround" class="btn btn-ghost btn-block">重新选择范围</button>
+      <button id="btn-export" class="btn btn-ghost btn-block">导出进度</button>
+    </div>
+  </main>
+</section>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>
