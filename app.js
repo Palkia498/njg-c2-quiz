@@ -151,12 +151,11 @@
 
   /* ---------------- 开始 / 继续 ---------------- */
   function startRound(lessons) {
-    var ids = [];
-    lessons.forEach(function (n) {
-      var pool = bank.questions.filter(function (q) { return q.lesson === n; })
-                               .map(function (q) { return q.id; });
-      ids = ids.concat(shuffle(pool));
-    });
+    /* 所选范围内全部题目混洗成一条顺序，不再按课分组 */
+    var ids = bank.questions.filter(function (q) {
+      return lessons.indexOf(q.lesson) >= 0;
+    }).map(function (q) { return q.id; });
+    ids = shuffle(ids);
     state = {
       v: 1,
       version: bank.version,
@@ -206,7 +205,7 @@
     answeredThis = false;
     var n = state.order.length;
     $('q-counter').textContent = (state.idx + 1) + ' / ' + n;
-    $('q-lesson').textContent = '第' + q.lesson + '課 · ' + bank.grammar[q.gid].pattern;
+    $('q-lesson').textContent = '第' + q.lesson + '課';
     $('progress-fill').style.width = (state.idx / n * 100) + '%';
 
     $('q-stem').innerHTML = escapeHtml(q.stem).split('（　　）').join('<span class="blank">　　</span>');
