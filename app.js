@@ -346,6 +346,18 @@
     }
   }
 
+  /* 只重洗「还没做到」的那一段，已答的题位置不动，进度不丢 */
+  function reshuffleRemaining() {
+    if (!state || !state.order) return;
+    var cut = Math.min(state.idx, state.order.length);
+    var tail = shuffle(state.order.slice(cut));
+    state.order = state.order.slice(0, cut).concat(tail);
+    state.updatedAt = Date.now();
+    saveState();
+    renderResumeBanner();
+    toast('已重新打乱剩下的 ' + tail.length + ' 题');
+  }
+
   /* ---------------- 开始 / 继续 ---------------- */
   function startRound(lessons) {
     /* 所选范围内全部题目混洗成一条顺序，不再按课分组 */
@@ -538,6 +550,7 @@
   /* ---------------- 绑定 ---------------- */
   function bind() {
     $('btn-resume').addEventListener('click', resumeRound);
+    $('btn-reshuffle').addEventListener('click', reshuffleRemaining);
     $('btn-discard').addEventListener('click', function () {
       clearState();
       renderSetup();
