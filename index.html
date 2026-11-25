@@ -11,7 +11,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./style.css?v=5">
 </head>
 <body>
 
@@ -20,6 +20,9 @@
   <header class="topbar">
     <h1>新日本语教程 <span class="vol">初级2</span></h1>
     <p class="sub" id="bank-sub">选择题库范围</p>
+    <div class="entrybar">
+      <button id="btn-wrongbook" class="entrybtn">错题本<span id="wrong-count"></span></button>
+    </div>
   </header>
 
   <div id="resume-banner" class="banner hidden">
@@ -41,6 +44,27 @@
   </footer>
 </section>
 
+<!-- ============ 错题本 ============ -->
+<section id="screen-wrong" class="screen hidden">
+  <header class="quizbar">
+    <button id="btn-wback" class="iconbtn" aria-label="返回">‹</button>
+    <div class="qmeta"><span id="w-title">错题本</span><span id="w-sub"></span></div>
+    <span class="iconbtn spacer"></span>
+  </header>
+
+  <div class="tabs">
+    <button id="tab-q" class="tab on">错题</button>
+    <button id="tab-g" class="tab">语法点</button>
+  </div>
+
+  <div id="wrong-list" class="lesson-list"></div>
+
+  <footer class="footbar">
+    <div class="footinfo"><span id="w-sel">已选 0 项 · 0 题</span></div>
+    <button id="btn-wstart" class="btn btn-primary" disabled>开始练习</button>
+  </footer>
+</section>
+
 <!-- ============ 答题 ============ -->
 <section id="screen-quiz" class="screen hidden">
   <header class="quizbar">
@@ -58,6 +82,10 @@
 
     <div id="q-feedback" class="feedback hidden">
       <div id="fb-verdict" class="verdict"></div>
+      <div class="markrow">
+        <button id="btn-mark-q" class="chip"></button>
+        <button id="btn-mark-g" class="chip"></button>
+      </div>
       <div class="gpanel">
         <div class="gp-label">语法点</div>
         <div id="gp-pattern" class="gp-pattern"></div>
@@ -90,6 +118,6 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="./app.js"></script>
+<script src="./app.js?v=5"></script>
 </body>
 </html>

@@ -152,6 +152,48 @@ h1{font-size:19px;margin:0 0 2px;letter-spacing:.01em}
 .gp-brief{font-size:14px;color:#5c554b;background:#f7f4ed;border-radius:12px;padding:10px 12px}
 .qsrc{font-size:11px;color:var(--muted);margin:10px 2px 0}
 
+/* ---------- 记号（记入错题本） ---------- */
+.markrow{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.chip{
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  padding:9px 14px;border-radius:999px;border:1.5px dashed #cfc7b8;
+  background:transparent;color:var(--muted);
+}
+.chip.on{border-style:solid;border-color:var(--accent);background:var(--accent-weak);color:var(--accent)}
+
+/* ---------- 入口按钮 ---------- */
+.entrybar{display:flex;gap:8px;margin-top:10px}
+.entrybtn{
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  padding:9px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);
+}
+.entrybtn span{color:var(--muted);font-weight:400;margin-left:6px;font-size:12px}
+
+/* ---------- 错题本 ---------- */
+.spacer{visibility:hidden}
+.tabs{display:flex;gap:6px;background:#ece6da;border-radius:12px;padding:4px;margin:2px 0 12px}
+.tab{
+  flex:1;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  padding:9px 6px;border-radius:9px;border:none;background:transparent;color:var(--muted);
+}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.item{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:11px 12px;margin-bottom:8px;box-shadow:var(--shadow);
+}
+.item.checked{border-color:var(--accent);background:#fbfdfc}
+.item .box{margin-top:2px}
+.item-main{flex:1;min-width:0}
+.item-t{font-size:14px;line-height:1.55;word-break:break-word}
+.item-s{font-size:12px;color:var(--muted);margin-top:3px}
+.item-x{
+  flex:0 0 auto;border:none;background:transparent;color:var(--muted);
+  font-size:16px;font-family:inherit;cursor:pointer;padding:2px 4px;line-height:1;
+}
+.empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:14px;line-height:1.9}
+
 /* ---------- 完成 ---------- */
 .donewrap{flex:1;display:flex;flex-direction:column;gap:16px}
 .score{
@@ -190,4 +232,8 @@ h1{font-size:19px;margin:0 0 2px;letter-spacing:.01em}
   .gp-brief{background:#26241f;color:#b8b1a5}
   .footbar{background:rgba(23,22,20,.92)}
   .unit-head{background:var(--bg)}
+  .tabs{background:#241f1b}
+  .tab.on{background:#2e2a25}
+  .item.checked{background:#1d2421}
+  .chip{border-color:#3b362f}
 }

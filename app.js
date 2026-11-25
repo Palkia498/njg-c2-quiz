@@ -5,16 +5,22 @@
   'use strict';
 
   var KEY = 'njg.c2.state.v1';
+  var WKEY = 'njg.c2.wrong.v1';
   var LETTER = ['A', 'B', 'C', 'D'];
   var bank = null;
   var state = null;
   var answeredThis = false;
+  var curQ = null;
+  /* 错题本：wrong.q[题号] / wrong.g[语法点号]，值=记入时间；wSel 是本次勾选的键（'q:xxx' / 'g:xxx'） */
+  var wrong = { q: {}, g: {} };
+  var wSel = {};
+  var wTab = 'q';
 
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------------- 工具 ---------------- */
   function show(id) {
-    ['screen-setup', 'screen-quiz', 'screen-done'].forEach(function (s) {
+    ['screen-setup', 'screen-quiz', 'screen-done', 'screen-wrong'].forEach(function (s) {
       $(s).classList.toggle('hidden', s !== id);
     });
     window.scrollTo(0, 0);
@@ -58,6 +64,197 @@
       if (bank.questions[i].id === id) return bank.questions[i];
     }
     return null;
+  }
+
+  /* ---------------- 错题本数据 ---------------- */
+  function loadWrong() {
+    try {
+      var o = JSON.parse(localStorage.getItem(WKEY) || 'null');
+      wrong = { q: (o && o.q) || {}, g: (o && o.g) || {} };
+    } catch (e) { wrong = { q: {}, g: {} }; }
+  }
+  function saveWrong() {
+    try {
+      localStorage.setItem(WKEY, JSON.stringify({ v: 1, q: wrong.q, g: wrong.g }));
+    } catch (e) {}
+  }
+  function gidLesson() {
+    if (gidLesson._m) return gidLesson._m;
+    var m = {};
+    bank.units.forEach(function (u) {
+      u.lessons.forEach(function (l) {
+        (l.points || []).forEach(function (g) { m[g] = l.lesson; });
+      });
+    });
+    gidLesson._m = m;
+    return m;
+  }
+  function lessonTitle(n) {
+    for (var i = 0; i < bank.units.length; i++) {
+      var ls = bank.units[i].lessons;
+      for (var j = 0; j < ls.length; j++) if (ls[j].lesson === n) return ls[j].title;
+    }
+    return '';
+  }
+  function questionsOfGid(gid) {
+    return bank.questions.filter(function (q) { return q.gid === gid; });
+  }
+  function wrongTotals() {
+    return { q: Object.keys(wrong.q).length, g: Object.keys(wrong.g).length };
+  }
+  function updateWrongBadge() {
+    var t = wrongTotals();
+    var el = $('wrong-count');
+    if (el) el.textContent = t.q + ' 题 / ' + t.g + ' 点';
+  }
+  function renderMarks() {
+    if (!curQ) return;
+    var qOn = !!wrong.q[curQ.id], gOn = !!wrong.g[curQ.gid];
+    var bq = $('btn-mark-q'), bg = $('btn-mark-g');
+    bq.textContent = qOn ? '✓ 已记入错题本' : '＋ 记入错题本';
+    bq.classList.toggle('on', qOn);
+    bg.textContent = gOn ? '✓ 已记入语法点' : '＋ 记入语法点';
+    bg.classList.toggle('on', gOn);
+  }
+  function toggleMark(kind) {
+    if (!curQ) return;
+    if (kind === 'q') {
+      if (wrong.q[curQ.id]) { delete wrong.q[curQ.id]; toast('已从错题本移除'); }
+      else { wrong.q[curQ.id] = Date.now(); toast('已记入错题本'); }
+    } else {
+      if (wrong.g[curQ.gid]) { delete wrong.g[curQ.gid]; toast('已从语法点本移除'); }
+      else { wrong.g[curQ.gid] = Date.now(); toast('已记入语法点本'); }
+    }
+    saveWrong();
+    renderMarks();
+    updateWrongBadge();
+  }
+
+  /* ---------------- 错题本界面 ---------------- */
+  function openWrongBook() {
+    wSel = {};
+    wTab = 'q';
+    renderWrongScreen();
+    show('screen-wrong');
+  }
+  function wrongSelIds() {
+    var ids = [], gids = [];
+    Object.keys(wSel).forEach(function (k) {
+      if (!wSel[k]) return;
+      if (k.indexOf('q:') === 0) ids.push(k.slice(2));
+      else gids.push(k.slice(2));
+    });
+    gids.forEach(function (g) {
+      questionsOfGid(g).forEach(function (q) {
+        if (ids.indexOf(q.id) < 0) ids.push(q.id);
+      });
+    });
+    return ids;
+  }
+  function renderWrongScreen() {
+    var t = wrongTotals();
+    $('tab-q').textContent = '错题 ' + t.q;
+    $('tab-g').textContent = '语法点 ' + t.g;
+    $('tab-q').classList.toggle('on', wTab === 'q');
+    $('tab-g').classList.toggle('on', wTab === 'g');
+    $('w-title').textContent = '错题本';
+    $('w-sub').textContent = t.q + ' 道错题 · ' + t.g + ' 个语法点';
+
+    // 按课分组
+    var groups = {};
+    if (wTab === 'q') {
+      Object.keys(wrong.q).forEach(function (id) {
+        var q = qById(id);
+        if (!q) return;
+        (groups[q.lesson] = groups[q.lesson] || []).push({ key: 'q:' + id, q: q });
+      });
+    } else {
+      var m = gidLesson();
+      Object.keys(wrong.g).forEach(function (gid) {
+        var les = m[gid];
+        (groups[les] = groups[les] || []).push({ key: 'g:' + gid, gid: gid });
+      });
+    }
+
+    var list = $('wrong-list');
+    list.innerHTML = '';
+    var lesKeys = Object.keys(groups).map(Number).sort(function (a, b) { return a - b; });
+    if (!lesKeys.length) {
+      list.innerHTML = '<div class="empty">' +
+        (wTab === 'q'
+          ? '还没有错题。<br>答题后点「＋ 记入错题本」，这里就会出现。'
+          : '还没有记过语法点。<br>答题后点「＋ 记入语法点」，这里就会出现。') +
+        '</div>';
+    }
+
+    lesKeys.forEach(function (les) {
+      var items = groups[les], keys = items.map(function (x) { return x.key; });
+      var wrap = document.createElement('div');
+      wrap.className = 'unit';
+      var head = document.createElement('div');
+      head.className = 'unit-head';
+      head.innerHTML = '<span class="unit-name">第' + les + '課　' +
+        escapeHtml(lessonTitle(les)) + '</span>';
+      var allBtn = document.createElement('button');
+      allBtn.className = 'unit-all';
+      allBtn.textContent = '本课全选';
+      allBtn.addEventListener('click', function () {
+        var allOn = keys.every(function (k) { return wSel[k]; });
+        keys.forEach(function (k) { if (allOn) delete wSel[k]; else wSel[k] = 1; });
+        renderWrongScreen();
+      });
+      head.appendChild(allBtn);
+      wrap.appendChild(head);
+
+      items.forEach(function (it) {
+        var row = document.createElement('div');
+        row.className = 'item' + (wSel[it.key] ? ' checked' : '');
+        var main = '';
+        if (it.q) {
+          main = '<div class="item-t">' + escapeHtml(it.q.stem) + '</div>' +
+                 '<div class="item-s">' + escapeHtml(bank.grammar[it.q.gid].pattern) +
+                 '　·　答：' + escapeHtml(it.q.options[it.q.answer]) + '</div>';
+        } else {
+          var g = bank.grammar[it.gid];
+          main = '<div class="item-t">' + escapeHtml(g.pattern) + '</div>' +
+                 '<div class="item-s">' + escapeHtml(g.cn) + '　·　' +
+                 questionsOfGid(it.gid).length + ' 题</div>';
+        }
+        row.innerHTML = '<div class="box">' + (wSel[it.key] ? '✓' : '') + '</div>' +
+          '<div class="item-main">' + main + '</div>' +
+          '<button class="item-x" aria-label="移除">✕</button>';
+        row.addEventListener('click', function () {
+          if (wSel[it.key]) delete wSel[it.key]; else wSel[it.key] = 1;
+          renderWrongScreen();
+        });
+        row.querySelector('.item-x').addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (it.q) delete wrong.q[it.q.id]; else delete wrong.g[it.gid];
+          delete wSel[it.key];
+          saveWrong();
+          renderWrongScreen();
+          updateWrongBadge();
+          toast('已移除');
+        });
+        wrap.appendChild(row);
+      });
+      list.appendChild(wrap);
+    });
+
+    var ids = wrongSelIds();
+    var nq = 0, ng = 0;
+    Object.keys(wSel).forEach(function (k) {
+      if (!wSel[k]) return;
+      if (k.indexOf('q:') === 0) nq++; else ng++;
+    });
+    var parts = [];
+    if (nq) parts.push(nq + ' 道错题');
+    if (ng) parts.push(ng + ' 个语法点');
+    $('w-sel').textContent = ids.length
+      ? '已选 ' + parts.join(' + ') + ' · 共 ' + ids.length + ' 题'
+      : '已选 0 项 · 0 题';
+    $('btn-wstart').disabled = ids.length === 0;
+    $('btn-wstart').textContent = ids.length ? '开始练习（' + ids.length + ' 题）' : '开始练习';
   }
 
   /* ---------------- 选题范围 ---------------- */
@@ -155,11 +352,15 @@
     var ids = bank.questions.filter(function (q) {
       return lessons.indexOf(q.lesson) >= 0;
     }).map(function (q) { return q.id; });
+    beginRound(ids, lessons);
+  }
+
+  function beginRound(ids, sel) {
     ids = shuffle(ids);
     state = {
       v: 1,
       version: bank.version,
-      sel: lessons,
+      sel: sel || [],
       order: ids,
       idx: 0,
       answers: {},
@@ -201,6 +402,7 @@
 
     var q = qById(state.order[state.idx]);
     if (!q) { state.idx++; saveState(); renderQuestion(); return; }
+    curQ = q;
 
     answeredThis = false;
     var n = state.order.length;
@@ -263,6 +465,7 @@
       ' p.' + q.page + '　·　句子为书中原文，未改写';
 
     $('q-feedback').classList.remove('hidden');
+    renderMarks();
     $('q-feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -355,6 +558,23 @@
       renderSetup();
     });
     $('btn-export').addEventListener('click', exportState);
+
+    /* 错题本 */
+    $('btn-wrongbook').addEventListener('click', openWrongBook);
+    $('btn-wback').addEventListener('click', function () {
+      show('screen-setup');
+      renderSetup();
+      updateWrongBadge();
+    });
+    $('tab-q').addEventListener('click', function () { wTab = 'q'; renderWrongScreen(); });
+    $('tab-g').addEventListener('click', function () { wTab = 'g'; renderWrongScreen(); });
+    $('btn-wstart').addEventListener('click', function () {
+      var ids = wrongSelIds();
+      if (!ids.length) return;
+      beginRound(ids, state && state.sel ? state.sel.slice() : []);
+    });
+    $('btn-mark-q').addEventListener('click', function () { toggleMark('q'); });
+    $('btn-mark-g').addEventListener('click', function () { toggleMark('g'); });
   }
 
   /* ---------------- 启动 ---------------- */
@@ -363,9 +583,11 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (data) {
         bank = data;
+        loadWrong();
         $('bank-sub').textContent = '选择题库范围 · 共 ' + bank.questions.length +
           ' 题 / ' + Object.keys(bank.grammar).length + ' 个语法点';
         bind();
+        updateWrongBadge();
         var saved = loadState();
         if (saved && saved.version === bank.version && saved.order && saved.order.length) {
           state = saved;

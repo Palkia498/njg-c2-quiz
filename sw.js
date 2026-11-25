@@ -1,5 +1,5 @@
 /* 离线缓存：外壳 + 题库。题库用 stale-while-revalidate，外壳 cache-first。 */
-var CACHE = 'njg-c2-v3';
+var CACHE = 'njg-c2-v5';
 var SHELL = [
   './',
   './index.html',
